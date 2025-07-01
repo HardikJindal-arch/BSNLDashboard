@@ -51,55 +51,6 @@
             line-height: 1;
             transform: translateY(0.25rem);
         }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 90%;
-            max-width: 600px;
-            position: relative;
-        }
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #005F73;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-            display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body class="bg-[#001219]">
@@ -115,9 +66,6 @@
             <div class="md:col-span-2 lg:col-span-3 bg-white rounded-lg shadow-xl p-6">
                 <h2 class="text-2xl font-bold text-[#005F73] mb-4">Executive Vision: A Nationally Backed Transformation</h2>
                 <p id="executiveVisionText" class="text-gray-600">BSNL is embarking on a monumental transformation, reinforced by substantial government backing and a clear strategic vision. This rollout is not merely a technological upgrade but a national mission to bridge the digital divide, foster indigenous innovation, and reclaim market leadership. The following data points illustrate the scale of this ambitious endeavor.</p>
-                <button id="generateInsightBtn" class="mt-4 bg-[#0A9396] hover:bg-[#005F73] text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300">
-                    ✨ Generate Strategic Insight
-                </button>
             </div>
 
             <div class="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center justify-center text-center">
@@ -222,9 +170,6 @@
                     <canvas id="marketShareChart"></canvas>
                 </div>
                 <p class="text-gray-600 mt-4 text-sm text-center">This chart illustrates the current wireless subscriber market share. BSNL's 4G/5G rollout aims to reverse subscriber decline by offering competitive services, particularly in its stronghold rural and semi-urban markets, thereby growing its share and solidifying its role as a key national operator.</p>
-                <button id="analyzeCompetitiveBtn" class="mt-4 bg-[#EE9B00] hover:bg-[#CA6702] text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300">
-                    ✨ Analyze Competitive Position
-                </button>
             </div>
 
         </div>
@@ -234,16 +179,6 @@
         <p class="text-sm text-gray-400">BSNL: Connecting India's Tomorrow, Today. This infographic is based on strategic analysis and public data as of mid-2025.</p>
         <p class="text-xs text-gray-500 mt-2">No SVG or Mermaid JS was used in the creation of this document. All charts rendered via Canvas.</p>
     </footer>
-
-    <div id="llmModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h3 id="modalTitle" class="text-xl font-bold text-[#005F73] mb-4"></h3>
-            <div id="modalLoader" class="loader"></div>
-            <p id="modalContent" class="text-gray-700"></p>
-            <p id="modalError" class="text-red-500 mt-4 hidden"></p>
-        </div>
-    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -402,116 +337,6 @@
                         }
                     },
                     ...sharedChartOptions
-                }
-            });
-
-            // LLM Integration
-            const llmModal = document.getElementById('llmModal');
-            const closeButton = llmModal.querySelector('.close-button');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalContent = document.getElementById('modalContent');
-            const modalLoader = document.getElementById('modalLoader');
-            const modalError = document.getElementById('modalError');
-
-            const showModal = (title, content, isLoading = false, isError = false) => {
-                modalTitle.textContent = title;
-                modalContent.textContent = content;
-                modalLoader.style.display = isLoading ? 'block' : 'none';
-                modalContent.style.display = isLoading ? 'none' : 'block';
-                modalError.style.display = isError ? 'block' : 'none';
-                llmModal.style.display = 'flex';
-            };
-
-            const hideModal = () => {
-                llmModal.style.display = 'none';
-                modalError.textContent = '';
-                modalError.style.display = 'none';
-            };
-
-            closeButton.onclick = hideModal;
-            window.onclick = (event) => {
-                if (event.target == llmModal) {
-                    hideModal();
-                }
-            };
-
-            const callGeminiAPI = async (prompt) => {
-                modalError.style.display = 'none';
-                modalError.textContent = '';
-                try {
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                    const payload = { contents: chatHistory };
-                    const apiKey = "";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
-                    }
-
-                    const result = await response.json();
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        return result.candidates[0].content.parts[0].text;
-                    } else {
-                        throw new Error('Unexpected API response structure or no content.');
-                    }
-                } catch (error) {
-                    console.error("Error calling Gemini API:", error);
-                    modalError.textContent = `Failed to generate insight: ${error.message}`;
-                    modalError.style.display = 'block';
-                    return null;
-                } finally {
-                    modalLoader.style.display = 'none';
-                    modalContent.style.display = 'block';
-                }
-            };
-
-            // Strategic Insight Generator
-            const generateInsightBtn = document.getElementById('generateInsightBtn');
-            const executiveVisionText = document.getElementById('executiveVisionText').textContent;
-            generateInsightBtn.addEventListener('click', async () => {
-                showModal('Strategic Insight', 'Generating insight...', true);
-                const prompt = `Based on the following executive vision for BSNL's 4G/5G rollout, what is the single most important strategic takeaway for BSNL leadership? Be concise and impactful. \n\nText: "${executiveVisionText}"`;
-                const insight = await callGeminiAPI(prompt);
-                if (insight) {
-                    modalContent.textContent = insight;
-                } else {
-                    modalContent.textContent = 'Could not generate insight.';
-                }
-            });
-
-            // Competitive Analysis Deep Dive
-            const analyzeCompetitiveBtn = document.getElementById('analyzeCompetitiveBtn');
-            const competitiveLandscapeText = document.getElementById('competitiveLandscapeText').textContent;
-            
-            analyzeCompetitiveBtn.addEventListener('click', async () => {
-                showModal('Competitive Position Analysis', 'Analyzing competitive landscape...', true);
-                // Ensure marketShareChart is defined and has data before accessing
-                let marketShareChartData = '';
-                if (marketShareChart && marketShareChart.data && marketShareChart.data.labels && marketShareChart.data.datasets[0]) {
-                    marketShareChartData = marketShareChart.data.labels.map((label, index) => {
-                        return `${label}: ${marketShareChart.data.datasets[0].data[index]} million subscribers`;
-                    }).join(', ');
-                } else {
-                    console.warn("Market share chart data not available for LLM prompt.");
-                    marketShareChartData = "Current market share data is unavailable. Please analyze based on general competitive landscape.";
-                }
-
-                const prompt = `Given BSNL's current market share (${marketShareChartData}) and the competitive landscape described ("${competitiveLandscapeText}"), what are 2-3 actionable strategies BSNL can pursue to leverage its unique advantages (especially rural reach and government backing) to gain market share and strengthen its position? Focus on high-level strategic actions.`;
-                const analysis = await callGeminiAPI(prompt);
-                if (analysis) {
-                    modalContent.textContent = analysis;
-                } else {
-                    modalContent.textContent = 'Could not generate analysis.';
                 }
             });
         });
